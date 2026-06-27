@@ -24,11 +24,16 @@ void show_cursor(void) {
 }
 
 void enter_alt_screen(void) {
+    // TODO: not use ascii escapes
     printf("\x1b[?1049h");
 }
 
-void leave_alt_screen(void) {
+void exit_alt_screen(void) {
     printf("\x1b[?1049l");
+}
+
+void change_cursor_style(CursorStyle style) {
+    printf("\033[%d q", style);
 }
 
 void enter_raw_mode(void) {

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
 #include "ui.h"
 #include "term.h"
@@ -32,6 +34,22 @@ int main(void) {
     };
 
     enter_raw_mode();
+    enter_alt_screen();
 
-    print_menu(&conf);
+    char c;
+    while (1) {
+        if (read(STDIN_FILENO, &c, 1) == -1 && errno == EAGAIN) {
+            printf("die");
+            break;
+        };
+        clear_screen();
+
+        print_menu(&conf);
+        if (c == 'q') {
+            break;
+        }
+    }
+
+    exit_alt_screen();
+    exit_raw_mode();
 }

@@ -30,6 +30,9 @@ size_t get_max_links_label_length(MenuLinks links) {
     return target_line_width;
 }
 
+
+// TODO: Refactor to menu_draw and not printf, == screen
+
 void print_top_line(size_t line_len, MenuStyle *style) {
     printf("%s", TOP_LEFT_CORNER[*style]);
     for (size_t i = 0; i < line_len; i++) {
