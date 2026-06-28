@@ -30,60 +30,128 @@ size_t get_max_links_label_length(MenuLinks links) {
     return target_line_width;
 }
 
+// build either the top or the bottom
+char *build_border_line(LineType type, size_t line_len, MenuStyle style) {
+    const char *left = NULL;
+    const char *right = NULL;
+    const char *horiz = HORIZ_PIPE[style];
 
-// TODO: Refactor to menu_draw and not printf, == screen
-
-void print_top_line(size_t line_len, MenuStyle *style) {
-    printf("%s", TOP_LEFT_CORNER[*style]);
-    for (size_t i = 0; i < line_len; i++) {
-        printf("%s", HORIZ_PIPE[*style]);
+    if (type == TOP) {
+        left = TOP_LEFT_CORNER[style];
+        right = TOP_RIGHT_CORNER[style];
+    } else if (type == BOTTOM) {
+        left = BOT_LEFT_CORNER[style];
+        right = BOT_RIGHT_CORNER[style];
+    } else {
+        printf("Undefined behavior");
+        return "";
     }
-    printf("%s", TOP_RIGHT_CORNER[*style]);
-    printf("\n");
-}
 
+    size_t total =
+        strlen(left) +
+        (line_len * strlen(horiz)) +
+        strlen(right) +
+        1; // null terminator
 
-void print_bot_line(size_t line_len, MenuStyle *style) {
-    printf("%s", BOT_LEFT_CORNER[*style]);
-    for (size_t i = 0; i < line_len; i++) {
-        printf("%s", HORIZ_PIPE[*style]);
+    char *buf= malloc(total);
+    char *p = buf;
+
+    strcpy(p, left);
+    p += strlen(left);
+
+    for (size_t i = 0; i < line_len; ++i) {
+        strcpy(p, horiz);
+        p += strlen(horiz);
     }
-    printf("%s", BOT_RIGHT_CORNER[*style]);
-    printf("\n");
+
+    strcpy(p, right);
+    p += strlen(right);
+
+    strcpy(p, "\0");
+
+    return buf;
 }
 
-void print_title_line(const char *title_text, size_t full_inner_length, MenuStyle *style) {
-    printf("%s", VERT_PIPE[*style]);
+char *build_title_line(const char* title_text, size_t full_inner_length, MenuStyle style) {
+    int max_len = strlen(VERT_PIPE[style])*2 + full_inner_length + 1;
+    char *buf = malloc(max_len);
+    char *p = buf;
 
-    printf("%*s", (int)(full_inner_length-strlen(title_text))/2, "");
-    printf("%s", title_text);
-    printf("%*s", (int)(full_inner_length-strlen(title_text))/2, "");
+    strcpy(p, VERT_PIPE[style]);
+    p += strlen(VERT_PIPE[style]);
 
-    printf("%s", VERT_PIPE[*style]);
-    printf("\n");
+    snprintf(p, max_len, "%*s", (int)(full_inner_length-strlen(title_text))/2, " ");
+    p += (full_inner_length-strlen(title_text))/2;
+    snprintf(p, max_len, "%s", title_text);
+    p += strlen(title_text);
+    snprintf(p, max_len, "%*s", (int)(full_inner_length-strlen(title_text))/2, " ");
+    p += (full_inner_length-strlen(title_text))/2;
+
+    strcpy(p, VERT_PIPE[style]);
+    p += strlen(VERT_PIPE[style]);
+
+    strcpy(p, "\0");
+
+    return buf;
 }
 
-void print_link_line(MenuLinks *links, MenuStyle *style, size_t full_inner_length, size_t max_link_length, int y_padding, int i, int *selected) {
-    printf("%s", VERT_PIPE[*style]);
+char *build_link_line(MenuLinks *links, MenuStyle style, size_t full_inner_length, size_t max_link_length, int y_padding, int i, int *selected) {
     int curr = i-(2+y_padding);
     char *label = links->items[curr].label;
     int left_padding = (full_inner_length - max_link_length) / 2;
     int right_padding = full_inner_length - left_padding - (int)strlen(label) - (int)strlen(DESELECTED_LIST);
 
-    printf("%*s", left_padding, "");
-    printf("%s%s", (curr == *selected) ? SELECTED_LIST : DESELECTED_LIST, label);
-    printf("%*s", right_padding, "");
+    size_t max_inner_string_length = 
+                strlen(VERT_PIPE[style])*2
+                + left_padding
+                + strlen(DESELECTED_LIST)
+                + strlen(label)
+                + right_padding
+                + 1;
+    char *buf = malloc(max_inner_string_length);
+    char *p = buf;
 
-    printf("%s", VERT_PIPE[*style]);
-    printf("\n");
+    strcpy(p, VERT_PIPE[style]);
+    p += strlen(VERT_PIPE[style]);
+
+    snprintf(p, max_inner_string_length, "%*s", left_padding, " ");
+    p += left_padding;
+
+    snprintf(p, max_inner_string_length, "%s%s", (curr == *selected) ? SELECTED_LIST : DESELECTED_LIST, label);
+    p += strlen(SELECTED_LIST) + strlen(label);
+
+    snprintf(p, max_inner_string_length, "%*s", right_padding, " ");
+    p += right_padding;
+
+    strcpy(p, VERT_PIPE[style]);
+    p += strlen(VERT_PIPE[style]);
+    strcpy(p, "\0");
+
+    return buf;
 }
 
-void print_empty_line(MenuStyle *style, size_t full_inner_length) {
-    printf("%s", VERT_PIPE[*style]);
+char *build_empty_line(MenuStyle style, size_t full_inner_length) {
+    char *buf = malloc(full_inner_length + strlen(VERT_PIPE[style])*2 + 1);
+    char *p = buf;
+
+    strcpy(p, VERT_PIPE[style]);
+    p += strlen(VERT_PIPE[style]);
+
+    snprintf(p, full_inner_length + 1, "%*s", (int)full_inner_length, " ");
+    p += full_inner_length;
+
+    strcpy(p, VERT_PIPE[style]);
+    p += strlen(VERT_PIPE[style]);
+
+    return buf;
+}
+
+void print_empty_line(MenuStyle style, size_t full_inner_length) {
+    printf("%s", VERT_PIPE[style]);
 
     printf("%*s", (int)full_inner_length, ""); 
 
-    printf("%s", VERT_PIPE[*style]);
+    printf("%s", VERT_PIPE[style]);
     printf("\n");
 }
 
@@ -94,19 +162,24 @@ void print_menu(MenuConfig *config) {
     size_t full_inner_length = target_inner_length + config->x_padding*2;
 
     // top line
-    print_top_line(full_inner_length, &config->style);
-
+    char *top_line = build_border_line(TOP, full_inner_length, config->style);
+    printf("%s\n", top_line);
+ 
     // middle body
     for (int i = 0; i < config->links.len + (config->y_padding*2) + 2; i++) {
         if (i == config->y_padding) {
-            print_title_line(config->title_text, full_inner_length, &config->style);
+            char* title = build_title_line(config->title_text, full_inner_length, config->style);
+            printf("%s\n", title);
         } else if (i > config->y_padding + 1 && i < config->links.len + 2 + config->y_padding) { // +1 = 1 space for padding between menu title
-            print_link_line(&config->links, &config->style, full_inner_length, max_link_length, config->y_padding, i, &config->selected);
+            char *link = build_link_line(&config->links, config->style, full_inner_length, max_link_length, config->y_padding, i, &config->selected);
+            printf("%s\n", link);
         } else {
-            // printf("printing empty line: i=%d, y_padding=%d, links.len=%d, calc=%d", i, y_padding, links.len, links.len+2+y_padding);
-            print_empty_line(&config->style, full_inner_length);
+            // print_empty_line(config->style, full_inner_length);
+            char *empty = build_empty_line(config->style, full_inner_length);
+            printf("%s\n", empty);
         }
     }
 
-    print_bot_line(full_inner_length, &config->style);
+    char *bot_line= build_border_line(BOTTOM, full_inner_length, config->style);
+    printf("%s\n", bot_line);
 }

@@ -8,6 +8,12 @@ typedef enum {
     DOUBLE = 3
 } MenuStyle;
 
+typedef enum {
+    TOP,
+    BOTTOM,
+    MIDDLE
+} LineType;
+
 typedef struct {
     char *label;
     void (*func)(void);

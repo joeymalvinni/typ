@@ -33,6 +33,9 @@ int main(void) {
         .selected = 1,
     };
 
+    print_menu(&conf);
+    return 0;
+
     enter_raw_mode();
     enter_alt_screen();
 
