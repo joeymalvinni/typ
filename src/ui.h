@@ -14,6 +14,11 @@ typedef enum {
     MIDDLE
 } LineType;
 
+typedef enum {
+    ROUNDED = 4,
+    STRAIGHT // default
+} CornerType;
+
 typedef struct {
     char *label;
     void (*func)(void);
@@ -28,6 +33,7 @@ typedef struct {
     const char *title_text;
     MenuStyle style;
     MenuLinks links;
+    CornerType corners;
     int x_padding;
     int y_padding;
     int inner_padding;

@@ -25,8 +25,9 @@ int main(void) {
 
     MenuConfig conf = {
         .title_text = "Test menu conf",
-        .style = DOUBLE,
+        .style = THIN,
         .links = links,
+        .corners = ROUNDED,
         .x_padding = 10,
         .y_padding = 5,
         .inner_padding = 3,

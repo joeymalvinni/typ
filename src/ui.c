@@ -4,13 +4,12 @@
 
 #include "ui.h"
 
-// TODO: add rounded corners -- only for thin pipe i think
 const char *VERT_PIPE[4] = {" ", "│", "┃", "║"};
 const char *HORIZ_PIPE[4] = {" ", "─", "━", "═"};
-const char *TOP_LEFT_CORNER[4] = {" ", "┌", "┏", "╔"};
-const char *TOP_RIGHT_CORNER[4] = {" ", "┐", "┓", "╗"};
-const char *BOT_LEFT_CORNER[4] = {" ", "└", "┗", "╚"};
-const char *BOT_RIGHT_CORNER[4] = {" ", "┘", "┛", "╝"};
+const char *TOP_LEFT_CORNER[5]  = {" ", "┌", "┏", "╔", "╭"};
+const char *TOP_RIGHT_CORNER[5] = {" ", "┐", "┓", "╗", "╮"};
+const char *BOT_LEFT_CORNER[5]  = {" ", "└", "┗", "╚", "╰"};
+const char *BOT_RIGHT_CORNER[5] = {" ", "┘", "┛", "╝", "╯"};
 
 const char *DESELECTED_LIST= "[ ] ";
 const char *SELECTED_LIST = "[x] ";
@@ -31,15 +30,16 @@ size_t get_max_links_label_length(MenuLinks links) {
 }
 
 // build either the top or the bottom
-char *build_border_line(LineType type, size_t line_len, MenuStyle style) {
+char *build_border_line(LineType type, size_t line_len, MenuStyle style, CornerType corners) {
     const char *left = NULL;
     const char *right = NULL;
+    int corner_style = (corners == ROUNDED) ? ROUNDED : style;
     if (type == TOP) {
-        left = TOP_LEFT_CORNER[style];
-        right = TOP_RIGHT_CORNER[style];
+        left = TOP_LEFT_CORNER[corner_style];
+        right = TOP_RIGHT_CORNER[corner_style];
     } else if (type == BOTTOM) {
-        left = BOT_LEFT_CORNER[style];
-        right = BOT_RIGHT_CORNER[style];
+        left = BOT_LEFT_CORNER[corner_style];
+        right = BOT_RIGHT_CORNER[corner_style];
     } else {
         fprintf(stderr, "Undefined behavior");
         return NULL;
@@ -144,7 +144,7 @@ void print_menu(MenuConfig *config) {
     size_t full_inner_length = target_inner_length + config->x_padding*2;
 
     // top line
-    char *top_line = build_border_line(TOP, full_inner_length, config->style);
+    char *top_line = build_border_line(TOP, full_inner_length, config->style, config->corners);
     printf("%s\n", top_line);
  
     // middle body
@@ -161,6 +161,6 @@ void print_menu(MenuConfig *config) {
         }
     }
 
-    char *bot_line= build_border_line(BOTTOM, full_inner_length, config->style);
+    char *bot_line= build_border_line(BOTTOM, full_inner_length, config->style, config->corners);
     printf("%s\n", bot_line);
 }
