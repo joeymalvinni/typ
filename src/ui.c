@@ -34,8 +34,6 @@ size_t get_max_links_label_length(MenuLinks links) {
 char *build_border_line(LineType type, size_t line_len, MenuStyle style) {
     const char *left = NULL;
     const char *right = NULL;
-    const char *horiz = HORIZ_PIPE[style];
-
     if (type == TOP) {
         left = TOP_LEFT_CORNER[style];
         right = TOP_RIGHT_CORNER[style];
@@ -43,31 +41,29 @@ char *build_border_line(LineType type, size_t line_len, MenuStyle style) {
         left = BOT_LEFT_CORNER[style];
         right = BOT_RIGHT_CORNER[style];
     } else {
-        printf("Undefined behavior");
-        return "";
+        fprintf(stderr, "Undefined behavior");
+        return NULL;
     }
 
-    size_t total =
-        strlen(left) +
-        (line_len * strlen(horiz)) +
-        strlen(right) +
-        1; // null terminator
+    const char *horiz = HORIZ_PIPE[style];
+    size_t l_len = strlen(left);
+    size_t r_len = strlen(right);
+    size_t h_len = strlen(horiz);
+
+    size_t total = l_len + line_len*h_len + r_len + 1;
 
     char *buf= malloc(total);
+    if (!buf) return NULL;
     char *p = buf;
 
-    strcpy(p, left);
-    p += strlen(left);
+    p = stpcpy(p, left);
 
     for (size_t i = 0; i < line_len; ++i) {
-        strcpy(p, horiz);
+        memcpy(p, horiz, strlen(horiz));
         p += strlen(horiz);
     }
 
-    strcpy(p, right);
-    p += strlen(right);
-
-    strcpy(p, "\0");
+    p = stpcpy(p, right);
 
     return buf;
 }
@@ -75,22 +71,20 @@ char *build_border_line(LineType type, size_t line_len, MenuStyle style) {
 char *build_title_line(const char* title_text, size_t full_inner_length, MenuStyle style) {
     int max_len = strlen(VERT_PIPE[style])*2 + full_inner_length + 1;
     char *buf = malloc(max_len);
+    if (!buf) return NULL;
     char *p = buf;
 
-    strcpy(p, VERT_PIPE[style]);
-    p += strlen(VERT_PIPE[style]);
 
-    snprintf(p, max_len, "%*s", (int)(full_inner_length-strlen(title_text))/2, " ");
+    p = stpcpy(p, VERT_PIPE[style]);
+
+    memset(p, ' ', (int)(full_inner_length-strlen(title_text))/2);
     p += (full_inner_length-strlen(title_text))/2;
-    snprintf(p, max_len, "%s", title_text);
-    p += strlen(title_text);
-    snprintf(p, max_len, "%*s", (int)(full_inner_length-strlen(title_text))/2, " ");
+    p = stpcpy(p, title_text);
+
+    memset(p, ' ', (int)(full_inner_length-strlen(title_text))/2);
     p += (full_inner_length-strlen(title_text))/2;
 
-    strcpy(p, VERT_PIPE[style]);
-    p += strlen(VERT_PIPE[style]);
-
-    strcpy(p, "\0");
+    p = stpcpy(p, VERT_PIPE[style]);
 
     return buf;
 }
@@ -109,50 +103,38 @@ char *build_link_line(MenuLinks *links, MenuStyle style, size_t full_inner_lengt
                 + right_padding
                 + 1;
     char *buf = malloc(max_inner_string_length);
+    if (!buf) return NULL;
     char *p = buf;
 
-    strcpy(p, VERT_PIPE[style]);
-    p += strlen(VERT_PIPE[style]);
+    p = stpcpy(p, VERT_PIPE[style]);
 
-    snprintf(p, max_inner_string_length, "%*s", left_padding, " ");
+    memset(p, ' ', left_padding);
     p += left_padding;
 
-    snprintf(p, max_inner_string_length, "%s%s", (curr == *selected) ? SELECTED_LIST : DESELECTED_LIST, label);
-    p += strlen(SELECTED_LIST) + strlen(label);
+    p = stpcpy(p, (curr == *selected) ? SELECTED_LIST : DESELECTED_LIST);
+    p = stpcpy(p, label);
 
-    snprintf(p, max_inner_string_length, "%*s", right_padding, " ");
+    memset(p, ' ', right_padding);
     p += right_padding;
 
-    strcpy(p, VERT_PIPE[style]);
-    p += strlen(VERT_PIPE[style]);
-    strcpy(p, "\0");
+    p = stpcpy(p, VERT_PIPE[style]);
 
     return buf;
 }
 
 char *build_empty_line(MenuStyle style, size_t full_inner_length) {
     char *buf = malloc(full_inner_length + strlen(VERT_PIPE[style])*2 + 1);
+    if (!buf) return NULL;
     char *p = buf;
 
-    strcpy(p, VERT_PIPE[style]);
-    p += strlen(VERT_PIPE[style]);
+    p = stpcpy(p, VERT_PIPE[style]);
 
-    snprintf(p, full_inner_length + 1, "%*s", (int)full_inner_length, " ");
+    memset(p, ' ', full_inner_length);
     p += full_inner_length;
 
-    strcpy(p, VERT_PIPE[style]);
-    p += strlen(VERT_PIPE[style]);
+    p = stpcpy(p, VERT_PIPE[style]);
 
     return buf;
-}
-
-void print_empty_line(MenuStyle style, size_t full_inner_length) {
-    printf("%s", VERT_PIPE[style]);
-
-    printf("%*s", (int)full_inner_length, ""); 
-
-    printf("%s", VERT_PIPE[style]);
-    printf("\n");
 }
 
 void print_menu(MenuConfig *config) {
@@ -174,7 +156,6 @@ void print_menu(MenuConfig *config) {
             char *link = build_link_line(&config->links, config->style, full_inner_length, max_link_length, config->y_padding, i, &config->selected);
             printf("%s\n", link);
         } else {
-            // print_empty_line(config->style, full_inner_length);
             char *empty = build_empty_line(config->style, full_inner_length);
             printf("%s\n", empty);
         }
